@@ -34,27 +34,27 @@ structures, to an extent. Consider this example:
 import prymer
 
 sample_src = {
-	"group_1": [
-	    {
-	        "user": "root",
-	        "name": "root",
-	        "uid": 0,
-	        "gecos": "ya rasputin"
-	    }
-	],
-	"group_2": [
-	    {
-	        "user": "andy",
-	        "name": "andy",
-	        "uid": 1337,
-	        "gecos": "is the best"
-	    }
-	]
+    "group_1": [
+        {
+            "user": "root",
+            "name": "root",
+            "uid": 0,
+            "gecos": "ya rasputin"
+        }
+    ],
+    "group_2": [
+        {
+            "user": "andy",
+            "name": "andy",
+            "uid": 1337,
+            "gecos": "is the best"
+        }
+    ]
 }
 
 map_template = {
-	"first_group1_username": prymer.Get['group_1'][0]['user'],
-	"first_group2_gecos": prymer.Get['group_2'][0]['gecos']
+    "first_group1_username": prymer.Get['group_1'][0]['user'],
+    "first_group2_gecos": prymer.Get['group_2'][0]['gecos']
 }
 
 # {'first_group2_gecos': 'is the best', 'first_group1_username': 'root'}
