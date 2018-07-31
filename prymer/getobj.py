@@ -6,6 +6,10 @@
 __all__ = ["Get"]
 
 
+def _get_bracket(target, target_name):
+	return target[target_name]
+
+
 class _GetChainLink(object):
 	def __init__(self, parent=None, op=None, op_arg=None):
 		self.op = op
@@ -16,11 +20,7 @@ class _GetChainLink(object):
 	    return _GetChainLink(self, getattr, target_attr)
 
 	def __getitem__(self, target_whatever):
-		return _GetChainLink(self, _GetChainLink.bracket, target_whatever)
-
-	@staticmethod
-	def bracket(target, target_name):
-		return target[target_name]
+		return _GetChainLink(self, _get_bracket, target_whatever)
 
 	def __call__(self, source):
 		if self.parent:
