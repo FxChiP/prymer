@@ -1,4 +1,7 @@
 
+from prymer.op import SkipIteration
+
+
 def port(src, dst):
     portmap = {
         dict: port_dict,
@@ -16,9 +19,12 @@ def port(src, dst):
 def port_dict(src, dst):
     ret_dict = {}
     for k, v in dst.items():
-        ret_dict_key = port(src, k)
-        ret_dict_val = port(src, v)
-        ret_dict[ret_dict_key] = ret_dict_val
+        try:
+            ret_dict_key = port(src, k)
+            ret_dict_val = port(src, v)
+            ret_dict[ret_dict_key] = ret_dict_val
+        except SkipIteration:
+            pass
 
     return ret_dict
 
@@ -27,7 +33,10 @@ def port_seq(which_type):
     def impl(src, dst):
         r = []
         for i in dst:
-            r.append(port(src, i))
+            try:
+                r.append(port(src, i))
+            except SkipIteration:
+                pass
         return which_type(r)
     return impl
 

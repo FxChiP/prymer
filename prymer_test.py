@@ -29,8 +29,13 @@ class SomeObj(object):
 
 a = SomeObj()
 b = {
-    "from_obj_attr_array_test": prymer.Get.OBJ_PROPERTY[2]
+    "from_obj_attr_array_test": prymer.Get.OBJ_PROPERTY[2],
+    "boop": prymer.OnlyIfExists(prymer.FromAttr("boop"))
 }
 
+c = prymer.port(a, b)
+print(c)
+
+a.boop = "hi!"
 c = prymer.port(a, b)
 print(c)

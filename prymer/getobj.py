@@ -3,6 +3,9 @@
 # The Get object
 #
 
+from prymer.op import SkipIteration
+
+
 __all__ = ["Get"]
 
 
@@ -35,7 +38,11 @@ class _GetChainLink(object):
             # transform the result, and that
             # transformation is what should go
             # down the line
-            result = self.__op_arg(current)
+            try:
+                result = self.__op_arg(current)
+            except SkipIteration as e:
+                # This doesn't make any sense here
+                e.reraise()
         elif self.__op is None:
             # noop: identity
             result = current

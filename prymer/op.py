@@ -1,5 +1,41 @@
 
-__all__ = ["FromAttr", "KeyOrDefault", "Template"]
+__all__ = [
+    "FromAttr",
+    "KeyOrDefault",
+    "OnlyIfExists",
+    "Template",
+    "SkipIteration"
+]
+
+
+class SkipIteration(Exception):
+    """
+    Like StopIteration, but instead just skips
+    the current iterated item -- used to prevent
+    list items or key/value pairs from being added
+    to the final product if a condition is not
+    met
+
+    If an exception caused it, store the exception
+    using the constructor so that it can reraise
+    for operations (e.g. Get) that shouldn't
+    typically get much use out of SkipIteration
+    """
+    def __init__(self, e=None):
+        self._e = e
+
+    def reraise(self):
+        if self._e:
+            e = self._e
+            while e and isinstance(e, SkipIteration):
+                # race to the bottom
+                e = e._e
+            if e:
+                raise e
+            else:
+                raise TypeError("SkipIteration without cause told to reraise")
+        else:
+            raise TypeError("SkipIteration without cause told to reraise")
 
 
 def Composite(func):
@@ -38,3 +74,21 @@ def Template(source, template, resolver=None):
         return template.format(**source)
     else:
         return template.format(*source)
+
+
+@Composite
+def OnlyIfExists(source, key):
+    try:
+        if callable(key):
+            r = key(source)
+        else:
+            # Assume it's a dict key against source itself
+            # If it's an attr, FromAttr should be used and
+            # it will be callable. If it's nested,
+            # Get should be used and it will be callable,
+            # etc.
+            r = source[key]
+        return r
+    except (KeyError, AttributeError, IndexError,
+            ValueError, TypeError, SkipIteration) as e:
+        raise SkipIteration(e)
