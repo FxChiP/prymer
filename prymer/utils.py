@@ -3,7 +3,8 @@ def port(src, dst):
     portmap = {
         dict: port_dict,
         list: port_seq(list),
-        tuple: port_seq(tuple)
+        tuple: port_seq(tuple),
+        set: port_seq(set)
     }
 
     if type(dst) in portmap:

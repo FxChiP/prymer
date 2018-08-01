@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="prymer",
-    version="0.0.3",
+    version="0.0.4",
     author="Zach Carlson",
     author_email="FxChiP@Gmail.com",
     description="prymer: Python-native data templating",
