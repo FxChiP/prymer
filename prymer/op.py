@@ -1,4 +1,6 @@
 
+import functools
+
 __all__ = [
     "FromAttr",
     "KeyOrDefault",
@@ -80,6 +82,7 @@ def Composite(func):
     # Take the parameters
     def composite_func(*args, **kwargs):
         # Take the data to apply to
+        @functools.wraps(func)
         def source_data(source):
             # Call the composite with the source
             # data and the parameters
@@ -131,7 +134,7 @@ def KeyOrDefault(source, key_name, *default):
 
     Parameters:
         source: object: The object to get an attr from.
-        key_name: str: the key/index to return
+        key_name: key: the key/index to return
         default: object: the default value of the attr
     
     KeyOrDefault is *very similar* to dict.get except that
