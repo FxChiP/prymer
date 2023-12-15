@@ -3,6 +3,8 @@
 # The Get object
 #
 
+import asyncio
+
 from prymer.op import SkipIteration
 
 
@@ -104,6 +106,59 @@ class _GetChainLink(object):
         op arg and returning the result (either to its
         child or to the actual caller)
         """
+        def _prymer_Get_resolve_from_current(current):
+            """
+            This part will just resolve what the current op
+            on the current link is. We're defining it here
+            so that we can re-use the functionality if we
+            happen to hit an asyncio coroutine vs. inlining
+            the whole thing.
+            """
+            if callable(self.__op_arg):
+                # Means we want to do an operation
+                # while we're doing the get
+                # The operation will completely
+                # transform the result, and that
+                # transformation is what should go
+                # down the line
+                try:
+                    result = self.__op_arg(current)
+                except SkipIteration as e:
+                    # SkipIteration doesn't have any
+                    # special meaning to prymer.Get
+                    # see prymer.op for more details
+                    # but we want to raise whatever
+                    # got SkipIteration'd
+                    e.reraise()
+            elif self.__op is None:
+                # noop: identity
+                result = current
+            else:
+                result = self.__op(current, self.__op_arg)
+            
+            return result
+
+        async def _prymer_async_Get_resolve(current, result=None):
+            """
+            Either parent or current link is asyncio coroutine
+            So we must await the parent or the current or both
+            """
+
+            # maybe await parent
+            if asyncio.iscoroutine(current):
+                current = await current
+            
+            if result is None:
+                # XXX: if it turned out the result of the current
+                # op is None, we technically take a slight perf hit
+                # here from doing it again ¯\_(ツ)_/¯
+                result = _prymer_Get_resolve_from_current(current)
+
+            if asyncio.iscoroutine(result):
+                result = await result
+            
+            return result
+        
 
         # Recurse up the chain
         if self.__parent:
@@ -111,29 +166,20 @@ class _GetChainLink(object):
         else:
             current = source
 
-        if callable(self.__op_arg):
-            # Means we want to do an operation
-            # while we're doing the get
-            # The operation will completely
-            # transform the result, and that
-            # transformation is what should go
-            # down the line
-            try:
-                result = self.__op_arg(current)
-            except SkipIteration as e:
-                # SkipIteration doesn't have any
-                # special meaning to prymer.Get
-                # see prymer.op for more details
-                # but we want to raise whatever
-                # got SkipIteration'd
-                e.reraise()
-        elif self.__op is None:
-            # noop: identity
-            result = current
+        if asyncio.iscoroutine(current):
+            # We have to return the coroutine that
+            # resolves this chain
+            return _prymer_async_Get_resolve(current)
         else:
-            result = self.__op(current, self.__op_arg)
-
-        return result
+            # Parent was fine, let's try this link
+            result = _prymer_Get_resolve_from_current(current)
+            if asyncio.iscoroutine(result):
+                # We have to return the coroutine that
+                # resolves this chain
+                return _prymer_async_Get_resolve(current, result)
+            else:
+                # We're all sync, so we're all good
+                return result
 
 
 Get = _GetChainLink()
