@@ -14,6 +14,14 @@ class PrymerGetTests(unittest.TestCase):
         _from = {"k": "test"}
         get_k = prymer.Get['k']
         self.assertEqual(get_k(_from), "test")
+    
+    def test_dict_get(self):
+        _from = {"k": "test"}
+        get_get = prymer.Get.get
+        # it should (1) get the `.get` attribute from the dict
+        # and then (2) the parenthesis after should call that method
+        # on the key "k"
+        self.assertEqual(get_get(_from)("k"), "test")
 
     def test_list_dict(self):
         _from = [{"k": "test"}]
