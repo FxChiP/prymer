@@ -18,6 +18,81 @@ def Template(src, template):
 
 
 def port(src, dst):
+    """
+    port
+    
+    Parameters:
+        src: The source data object
+        dst: The "destination" object (more like a template)
+    
+    port is one of the biggest core features of prymer.
+    The whole purpose of it is to take a source/input 
+    data object, such as:
+
+    src = {
+        "user": {
+            "id": 0,
+            "name": "test",
+            "group": "Admin"
+        },
+        "post": {
+            "title": "test title",
+            "content": "lorem ipsum..."
+        }
+    }
+
+    And convert it using a dst object, like:
+
+    dst = {
+        "author": prymer.Get['user']['name'],
+        "title": prymer.Get['post']['title'],
+        "content": prymer.Get['post']['content']
+    }
+
+    Such that the result of `prymer.port(src, dst)` is:
+
+    {
+        "author": "test",
+        "title": "test title",
+        "content": "lorem ipsum..."
+    }
+
+    All of the keys and values in the dst object
+    run through port, which eventually delegates them
+    down to port_ident -- which will either return
+    the value if it isn't a callable or, if it is,
+    will return the value of the result of calling the
+    callable with src as a sole argument. This way,
+    you can define your desired output object and all
+    of the accesses you would need to make on an input
+    object to build it at the same time, like a template.
+
+    This will also work with async -- if a callable
+    happens to return a coroutine object (i.e. if the
+    callable was defined with `async def`), the result
+    of the entire operation will also be a coroutine,
+    and you just have to `await` it to get your result as 
+    an extra step.
+
+    Potential gotcha: if a callable in a seq item or a dict
+    raises prymer.SkipIteration, that entire list item or key/value
+    pair will be skipped. This is a deliberate side effect
+    that allows prymer.OnlyIfExists to have its intended
+    effect (i.e. to only have a k/v pair or a particular
+    index if there is such a source value).
+
+    Returns:
+        Either the fully-resolved object in dst
+        (i.e. with all callables on input resolved)
+        or a coroutine that, when awaited, will
+        return the fully-resolved object. The coroutine
+        will only be returned if *any one* callable in
+        dst returned a coroutine (checked via
+        asyncio.iscoroutine).
+    
+    Raises:
+        Any underlying exception that isn't SkipIteration.
+    """
     portmap = {
         dict: port_dict,
         list: port_seq(list),
