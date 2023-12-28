@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "prymer"
+name = "shapyro"
 version = "0.1.0"
 description = "Python-native data templating"
 authors = ["Zach Carlson <fxchip+git@gmail.com>"]

@@ -1,8 +1,8 @@
-# Prymer
+# Shapyro
 
 ## Introduction
 
-Prymer is a Python library for Python-native data templating.
+Shapyro is a Python library for Python-native data templating.
 The intent is to make (for instance) large-scale remaps easy, clear, and
 declarative up-front without even necessarily having the source data
 already available. 
@@ -12,26 +12,26 @@ already available.
 At a small scale:
 
 ```python
-import prymer
+import shapyro
 
 sample_src = {
     "list_of_numbers": [0,1,2],
     "some_string": "hello world"
 }
 
-get_first_number = prymer.Get['list_of_numbers'][0]
+get_first_number = shapyro.Get['list_of_numbers'][0]
 first_number = get_first_number(sample_src)  # returns 0
 ```
 
-`prymer.Get` allows you to compose an access of an object or Python-native
+`shapyro.Get` allows you to compose an access of an object or Python-native
 data type using Python's own syntax into its own callable. You then call
 the resulting callable on the source structure to extract the desired value.
 
-At a larger scale, `prymer.port` can be used to resolve more complex
+At a larger scale, `shapyro.port` can be used to resolve more complex
 structures, to an extent. Consider this example:
 
 ```python
-import prymer
+import shapyro
 
 sample_src = {
     "group_1": [
@@ -53,29 +53,29 @@ sample_src = {
 }
 
 map_template = {
-    "first_group1_username": prymer.Get['group_1'][0]['user'],
-    "first_group2_gecos": prymer.Get['group_2'][0]['gecos']
+    "first_group1_username": shapyro.Get['group_1'][0]['user'],
+    "first_group2_gecos": shapyro.Get['group_2'][0]['gecos']
 }
 
 # {'first_group2_gecos': 'is the best', 'first_group1_username': 'root'}
-final_map = prymer.port(sample_src, map_template)
+final_map = shapyro.port(sample_src, map_template)
 ```
 
-`prymer.port` will iterate through the template, look for any callables and
+`shapyro.port` will iterate through the template, look for any callables and
 call them with the source map as the sole argument to fill out their values.
 
 ## Gotchas
 
 Interfaces and functionality subject to change (this is a very new library).
 
-`prymer.Get` does not, by default, protect against the source data not 
+`shapyro.Get` does not, by default, protect against the source data not 
 matching the provided specification; there are ways to prevent this, but
 unfortunately they're a bit ugly. In the case of dicts and arrays, we can
 do this:
 
 ```python
 arr = [0,1]
-get_third = prymer.Get[prymer.KeyOrDefault(2, None)]
+get_third = shapyro.Get[shapyro.KeyOrDefault(2, None)]
 # None
 third = get_third(arr)
 ```
@@ -92,7 +92,7 @@ a = someObj()
 c = someObj()
 c.b = "yes b!"
 
-get_attr_b = prymer.Get[prymer.FromAttr("b", "no b!")]
+get_attr_b = shapyro.Get[shapyro.FromAttr("b", "no b!")]
 # This will be "no b!"
 attr_b1 = get_attr_b(a)
 # This will be "yes b!"
@@ -107,6 +107,6 @@ variables and class-local references](https://docs.python.org/2/tutorial/classes
 
 Otherwise, in general, the exceptions that could be thrown should be the exact
 same as if you attempted them directly on the accessed object proper, since
-prymer attempts to use those same mechanisms where it can (so AttributeErrors
+shapyro attempts to use those same mechanisms where it can (so AttributeErrors
 when attributes don't exist, IndexErrors where the index is out of bounds,
 KeyErrors where a key doesn't exist, etc). 

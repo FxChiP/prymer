@@ -4,14 +4,14 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="prymer",
-    version="0.0.5",
+    name="shapyro",
+    version="0.1.0",
     author="Zach Carlson",
     author_email="FxChiP@Gmail.com",
     description="prymer: Python-native data templating",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/FxChiP/Prymer",
+    url="https://github.com/FxChiP/Shapyro",
     packages=setuptools.find_packages(),
     classifiers=(
         "Development Status :: 2 - Pre-Alpha",
