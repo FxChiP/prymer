@@ -1,7 +1,7 @@
 
 import unittest
 
-import prymer
+import shapyro
 
 class PortTests(unittest.TestCase):
     """
@@ -10,7 +10,7 @@ class PortTests(unittest.TestCase):
 
     We're not going to directly test all the helper
     functions to port because port will call them anyway --
-    so we're just going to call prymer.port as a whole.
+    so we're just going to call shapyro.port as a whole.
     """
 
     def setUp(self):
@@ -29,34 +29,34 @@ class PortTests(unittest.TestCase):
     def test_documented_case(self):
         src = self._input
         dst = {
-            "author": prymer.Get['user']['name'],
-            "title": prymer.Get['post']['title'],
-            "content": prymer.Get['post']['content']
+            "author": shapyro.Get['user']['name'],
+            "title": shapyro.Get['post']['title'],
+            "content": shapyro.Get['post']['content']
         }
         expect = {
             "author": "test",
             "title": "test title",
             "content": "lorem ipsum..."
         }
-        self.assertEqual(prymer.port(src, dst), expect)
+        self.assertEqual(shapyro.port(src, dst), expect)
     
     def test_onlyifexists_skipped(self):
         """
         if SkipIteration is raised,
         the entire k/v pair of a dict should be skipped
-        (prymer.OnlyIfExists raises SkipIteration)
+        (shapyro.OnlyIfExists raises SkipIteration)
         """
         src = self._input
         dst = {
-            "author": prymer.Get['user']['name'],
-            "title": prymer.OnlyIfExists(prymer.Get['post']['not_title']),
-            "content": prymer.Get['post']['content']
+            "author": shapyro.Get['user']['name'],
+            "title": shapyro.OnlyIfExists(shapyro.Get['post']['not_title']),
+            "content": shapyro.Get['post']['content']
         }
         expect = {
             "author": "test",
             "content": "lorem ipsum..."
         }
-        self.assertEqual(prymer.port(src, dst), expect)
+        self.assertEqual(shapyro.port(src, dst), expect)
     
     def test_fail_port(self):
         """
@@ -65,18 +65,18 @@ class PortTests(unittest.TestCase):
         """
         src = self._input
         dst = {
-            "author": prymer.Get['user']['doesnt_exist']
+            "author": shapyro.Get['user']['doesnt_exist']
         }
         with self.assertRaises(KeyError):
-            prymer.port(src, dst)
+            shapyro.port(src, dst)
     
     def test_template(self):
         """
-        test prymer.Template
+        test shapyro.Template
         """
-        dst = prymer.Template({
-            "author": prymer.Get['user']['name'],
-            "title": prymer.Get['post']['title']
+        dst = shapyro.Template({
+            "author": shapyro.Get['user']['name'],
+            "title": shapyro.Get['post']['title']
         })
         expect = {
             "author": "test",
@@ -110,9 +110,9 @@ class PortAsyncTest(unittest.IsolatedAsyncioTestCase):
     async def test_async_port(self):
         src = self._input
         dst = {
-            "author": prymer.Get['user']['name'],
-            "title": prymer.Get['post']['title'],
-            "content": prymer.Get['post']['content'],
+            "author": shapyro.Get['user']['name'],
+            "title": shapyro.Get['post']['title'],
+            "content": shapyro.Get['post']['content'],
             "my_IP": self._get_IP
         }
         expect = {
@@ -121,14 +121,14 @@ class PortAsyncTest(unittest.IsolatedAsyncioTestCase):
             "content": "lorem ipsum...",
             "my_IP": "127.0.0.1"
         }
-        self.assertEqual(await prymer.port(src, dst), expect)
+        self.assertEqual(await shapyro.port(src, dst), expect)
     
     async def test_async_port_nested(self):
         src = self._input
         dst = {
-            "author": prymer.Get['user']['name'],
-            "title": prymer.Get['post']['title'],
-            "content": prymer.Get['post']['content'],
+            "author": shapyro.Get['user']['name'],
+            "title": shapyro.Get['post']['title'],
+            "content": shapyro.Get['post']['content'],
             "addrinfo": self._get_addrinfo
         }
         expect = {
@@ -141,7 +141,7 @@ class PortAsyncTest(unittest.IsolatedAsyncioTestCase):
             }
         }
 
-        self.assertEqual(await prymer.port(src, dst), expect)
+        self.assertEqual(await shapyro.port(src, dst), expect)
 
 
 if __name__=="__main__":
