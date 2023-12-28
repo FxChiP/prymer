@@ -1,6 +1,6 @@
 
-from prymer.op import *
-from prymer.getobj import Get
-from prymer.utils import Template, port
+from shapyro.op import *
+from shapyro.getobj import Get
+from shapyro.utils import Template, port
 
-name = "prymer"
+name = "shapyro"

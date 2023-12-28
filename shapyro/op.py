@@ -67,14 +67,14 @@ def Composite(func):
     This makes it so you can just write a function
     that takes source and parameters all in one place
     and this decorator will make it work in the way that
-    prymer.Get[] expects.
+    shapyro.Get[] expects.
 
     Note well that this also means calling those functions
     will return a *function* rather than the result; that
     *function* is what is called on the input data to get
     the actual final result.
 
-    For documented @prymer.Composite functions, an *ultimate*
+    For documented @shapyro.Composite functions, an *ultimate*
     return will be documented instead of the direct return,
     which will always be a function that takes one parameter:
     the value to operate on.
@@ -102,20 +102,20 @@ def FromAttr(source, attr_name, *default):
         default: object: the default value of the attr
     
     FromAttr is a proxy call to getattr() . The reason
-    it's necessary is because a getattr on prymer.Get
+    it's necessary is because a getattr on shapyro.Get
     will end up getting a function that is supposed to
     be called on some input data to get that attribute
-    (i.e. prymer.Get will *defer* that getattr until
+    (i.e. shapyro.Get will *defer* that getattr until
     the call of the returned function).
 
     The intended usage is:
 
-    get_hello = prymer.Get[prymer.FromAttr("hello","world")]
+    get_hello = shapyro.Get[shapyro.FromAttr("hello","world")]
     get_hello(dict)  # world (because of the default)
 
     But you can also just do:
     
-    get_hello = prymer.FromAttr("hello","world")
+    get_hello = shapyro.FromAttr("hello","world")
     get_hello(dict)  # world (because of the default)
     
     Ultimate return:
@@ -141,13 +141,13 @@ def KeyOrDefault(source, key_name, *default):
     it functions on arrays too; it's more like accessing a
     sequence/map using brackets that also allows for a default.
 
-    Like FromAttr, it's necessary because doing prymer.Get.get
+    Like FromAttr, it's necessary because doing shapyro.Get.get
     will defer getting the `get` attribute until the resulting
     function is called on the input data. 
 
     The intended usage is:
 
-    get_2 = prymer.Get[KeyOrDefault(2,"not found")]
+    get_2 = shapyro.Get[KeyOrDefault(2,"not found")]
     get_2([0,1,5])                               # 5
     get_2({"hello": "world"})                    # "not found"
     get_2({"hello": "world", 2: "here I am"})    # "here I am"
@@ -155,7 +155,7 @@ def KeyOrDefault(source, key_name, *default):
 
     But you can also just do:
     
-    get_2 = prymer.KeyOrDefault(2,"not found")
+    get_2 = shapyro.KeyOrDefault(2,"not found")
     get_2([0,1,5])                               # 5
     get_2({"hello": "world"})                    # "not found"
     get_2({"hello": "world", 2: "here I am"})    # "here I am"
@@ -166,7 +166,7 @@ def KeyOrDefault(source, key_name, *default):
 
     Might raise:
         If no default: KeyError for dicts, IndexError for sequences
-        (if you're not using a default, you should use prymer.Get[])
+        (if you're not using a default, you should use shapyro.Get[])
     """
     try:
         return source[key_name]
@@ -192,12 +192,12 @@ def StringTemplate(source, template, resolver=None):
     it will be called on source and its *result* will go into template.format with
     the same rules (for instance if you want to convert a full object to a dict).
 
-    You *can* use it in prymer.Get[] like prymer.Get[prymer.StringTemplate(...)]
+    You *can* use it in shapyro.Get[] like shapyro.Get[shapyro.StringTemplate(...)]
     but it's probably more readable on its own.
 
     Example:
 
-    a = prymer.StringTemplate("Hello, {name}")
+    a = shapyro.StringTemplate("Hello, {name}")
     a({"name": "world"})  # "Hello, world"
 
     Ultimate return:
@@ -224,34 +224,34 @@ def OnlyIfExists(source, key):
         key: callable, dict key, or index: what to check for
 
     OnlyIfExists is a really special case primarily for
-    usage with prymer.utils.port() and friends. The intent
+    usage with shapyro.utils.port() and friends. The intent
     is to allow for skipping indexes or k/v *pairs* in dicts
     when the source element does not exist. e.g.:
 
-    tpl = {"my_name": prymer.Get["name"], "my_attrs": prymer.OnlyIfExists("attrs")}
+    tpl = {"my_name": shapyro.Get["name"], "my_attrs": shapyro.OnlyIfExists("attrs")}
     src1 = {"name": "Fx"}
     src2 = {"name": "Andy", "attrs": {"the_best": "true"}}
-    prymer.port(src1, tpl)    # {'my_name': 'Fx'}
-    prymer.port(src2, tpl)    # {'my_name': 'Andy', 'my_attrs': {'the_best': 'true'}}
+    shapyro.port(src1, tpl)    # {'my_name': 'Fx'}
+    shapyro.port(src2, tpl)    # {'my_name': 'Andy', 'my_attrs': {'the_best': 'true'}}
 
     By default, it expects the input data to be a dict. You can implement
     this check against an object's attribute instead by invoking it like:
 
-    prymer.OnlyIfExists(prymer.FromAttr("name"))
+    shapyro.OnlyIfExists(shapyro.FromAttr("name"))
 
     Example of this usage:
 
     from collections import namedtuple
     nr = namedtuple("NameRecord", ["name", "index", "other_index"])
-    tpl = {"my_name": prymer.OnlyIfExists(prymer.FromAttr("name")), "my_2": prymer.Get[2]}
+    tpl = {"my_name": shapyro.OnlyIfExists(shapyro.FromAttr("name")), "my_2": shapyro.Get[2]}
     src = (0, 1, "beep")
     src2 = nr("Fx", 0, 5)
-    prymer.port(src, tpl)    # {'my_2': 'beep'}
-    prymer.port(src2, tpl)   # {'my_name': 'Fx', 'my_2': 5}
+    shapyro.port(src, tpl)    # {'my_2': 'beep'}
+    shapyro.port(src2, tpl)   # {'my_name': 'Fx', 'my_2': 5}
 
     Ultimate return:
         source[key] if key is not callable
-        key(source) if key is callable (allowing prymer.Get usage)
+        key(source) if key is callable (allowing shapyro.Get usage)
     
     Might raise:
         SkipIteration on KeyError, AttributeError, IndexError, ValueError, TypeError, or SkipIteration

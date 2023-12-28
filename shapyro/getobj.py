@@ -5,7 +5,7 @@
 
 import asyncio
 
-from prymer.op import SkipIteration
+from shapyro.op import SkipIteration
 
 
 __all__ = ["Get"]
@@ -20,12 +20,12 @@ class _GetChainLink(object):
     _GetChainLink
     
     This is the crux of the implementation and the point
-    of prymer. The idea is that we want to easily and 
+    of shapyro. The idea is that we want to easily and 
     recursively define an access for an arbitrarily deep
     object, dict, or list, in a readable, not-multiline way.
     Ideally, for instance, something like:
 
-    get_first_image = prymer.Get.obj['spec']['template']['spec']['containers'][0]['image']
+    get_first_image = shapyro.Get.obj['spec']['template']['spec']['containers'][0]['image']
 
     which would always get us the first image in a Kubernetes
     Deployment/StatefulSet/etc. returned from e.g. pykube-ng.
@@ -45,9 +45,9 @@ class _GetChainLink(object):
     access in question more eagerly.
 
     This also acts as a limitation, though: we can't know if the
-    getattr() called on prymer.Get has a default in mind, for
+    getattr() called on shapyro.Get has a default in mind, for
     instance. To work around that, we have a special case: if the
-    key to the prymer.Get[] invocation is a callable, that callable
+    key to the shapyro.Get[] invocation is a callable, that callable
     is run instead of getting the key, and the result of *that* is
     passed down the chain.[1] As an extension of that special case,
     you can also implement callables that take one argument (the
@@ -55,7 +55,7 @@ class _GetChainLink(object):
     that operation at that particular point in time.
 
     [1] If your source dict key is a callable, you will have to use
-        prymer.Get[prymer.KeyOrDefault(your_callable)] to get at it.
+        shapyro.Get[shapyro.KeyOrDefault(your_callable)] to get at it.
     """
     def __init__(self, parent=None, op=None, op_arg=None):
         """
@@ -72,21 +72,21 @@ class _GetChainLink(object):
 
     def __getattr__(self, target_attr):
         """
-        prymer.Get.something
+        shapyro.Get.something
         """
         return _GetChainLink(self, getattr, target_attr)
 
     def __getitem__(self, target_whatever):
         """
-        prymer.Get["something"]
+        shapyro.Get["something"]
         or
-        prymer.Get[FromAttr("something","default")]
+        shapyro.Get[FromAttr("something","default")]
         """
         return _GetChainLink(self, _get_bracket, target_whatever)
     
     def __repr__(self):
         if self.__op is None and self.__parent is None:
-            return "prymer.Get"
+            return "shapyro.Get"
         else:
             if self.__op is getattr:
                 return f"{self.__parent.__repr__()}.{self.__op_arg}"
@@ -106,7 +106,7 @@ class _GetChainLink(object):
         op arg and returning the result (either to its
         child or to the actual caller)
         """
-        def _prymer_Get_resolve_from_current(current):
+        def _shapyro_Get_resolve_from_current(current):
             """
             This part will just resolve what the current op
             on the current link is. We're defining it here
@@ -125,8 +125,8 @@ class _GetChainLink(object):
                     result = self.__op_arg(current)
                 except SkipIteration as e:
                     # SkipIteration doesn't have any
-                    # special meaning to prymer.Get
-                    # see prymer.op for more details
+                    # special meaning to shapyro.Get
+                    # see shapyro.op for more details
                     # but we want to raise whatever
                     # got SkipIteration'd
                     e.reraise()
@@ -138,7 +138,7 @@ class _GetChainLink(object):
             
             return result
 
-        async def _prymer_async_Get_resolve(current, result=None):
+        async def _shapyro_async_Get_resolve(current, result=None):
             """
             Either parent or current link is asyncio coroutine
             So we must await the parent or the current or both
@@ -152,7 +152,7 @@ class _GetChainLink(object):
                 # XXX: if it turned out the result of the current
                 # op is None, we technically take a slight perf hit
                 # here from doing it again ¯\_(ツ)_/¯
-                result = _prymer_Get_resolve_from_current(current)
+                result = _shapyro_Get_resolve_from_current(current)
 
             if asyncio.iscoroutine(result):
                 result = await result
@@ -169,14 +169,14 @@ class _GetChainLink(object):
         if asyncio.iscoroutine(current):
             # We have to return the coroutine that
             # resolves this chain
-            return _prymer_async_Get_resolve(current)
+            return _shapyro_async_Get_resolve(current)
         else:
             # Parent was fine, let's try this link
-            result = _prymer_Get_resolve_from_current(current)
+            result = _shapyro_Get_resolve_from_current(current)
             if asyncio.iscoroutine(result):
                 # We have to return the coroutine that
                 # resolves this chain
-                return _prymer_async_Get_resolve(current, result)
+                return _shapyro_async_Get_resolve(current, result)
             else:
                 # We're all sync, so we're all good
                 return result

@@ -1,17 +1,17 @@
 
 import asyncio
-from prymer.op import Composite, SkipIteration
+from shapyro.op import Composite, SkipIteration
 
 @Composite
 def Template(src, template):
     """
     Template
 
-    "Class-like" style for prymer.utils.port
+    "Class-like" style for shapyro.utils.port
 
     e.g. 
 
-    x = prymer.Template({"a": prymer.Get['name']})
+    x = shapyro.Template({"a": shapyro.Get['name']})
     x({"name": "Fx"})   # {"a": "Fx"}
     """
     return port(src, template)
@@ -25,7 +25,7 @@ def port(src, dst):
         src: The source data object
         dst: The "destination" object (more like a template)
     
-    port is one of the biggest core features of prymer.
+    port is one of the biggest core features of shapyro.
     The whole purpose of it is to take a source/input 
     data object, such as:
 
@@ -44,12 +44,12 @@ def port(src, dst):
     And convert it using a dst object, like:
 
     dst = {
-        "author": prymer.Get['user']['name'],
-        "title": prymer.Get['post']['title'],
-        "content": prymer.Get['post']['content']
+        "author": shapyro.Get['user']['name'],
+        "title": shapyro.Get['post']['title'],
+        "content": shapyro.Get['post']['content']
     }
 
-    Such that the result of `prymer.port(src, dst)` is:
+    Such that the result of `shapyro.port(src, dst)` is:
 
     {
         "author": "test",
@@ -75,9 +75,9 @@ def port(src, dst):
     an extra step.
 
     Potential gotcha: if a callable in a seq item or a dict
-    raises prymer.SkipIteration, that entire list item or key/value
+    raises shapyro.SkipIteration, that entire list item or key/value
     pair will be skipped. This is a deliberate side effect
-    that allows prymer.OnlyIfExists to have its intended
+    that allows shapyro.OnlyIfExists to have its intended
     effect (i.e. to only have a k/v pair or a particular
     index if there is such a source value).
 
