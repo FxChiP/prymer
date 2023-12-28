@@ -1,6 +1,6 @@
-import prymer
+import shapyro
 
-a = prymer.Get["a"]
+a = shapyro.Get["a"]
 b = {"a": 1}
 
 print("a is {a}".format(a=a(b)))
@@ -16,10 +16,10 @@ a = {
 }
 
 b = {
-    "map_test": prymer.Template("{one[attr_b][0]} {five[attr_c][2]}")
+    "map_test": shapyro.Template("{one[attr_b][0]} {five[attr_c][2]}")
 }
 
-c = prymer.port(a, b)
+c = shapyro.port(a, b)
 print(c)
 
 
@@ -29,13 +29,13 @@ class SomeObj(object):
 
 a = SomeObj()
 b = {
-    "from_obj_attr_array_test": prymer.Get.OBJ_PROPERTY[2],
-    "boop": prymer.OnlyIfExists(prymer.FromAttr("boop"))
+    "from_obj_attr_array_test": shapyro.Get.OBJ_PROPERTY[2],
+    "boop": shapyro.OnlyIfExists(shapyro.FromAttr("boop"))
 }
 
-c = prymer.port(a, b)
+c = shapyro.port(a, b)
 print(c)
 
 a.boop = "hi!"
-c = prymer.port(a, b)
+c = shapyro.port(a, b)
 print(c)
