@@ -100,9 +100,8 @@ attr_b2 = get_attr_b(c)
 ```
 
 You will also need to use the square bracket syntax and `FromAttr()` in cases
-where you actually need to access the following attribute names:
-`_GetChainLink__op`, `_GetChainLink__op_arg`, or `_GetChainLink__parent` since
-these are "private" attributes -- see [Python's documentation on private
+where you actually need to access the attribute named `_GetChainLink__call_repr` since
+it's a "private" attribute -- see [Python's documentation on private
 variables and class-local references](https://docs.python.org/2/tutorial/classes.html#private-variables-and-class-local-references) for more details.
 
 Otherwise, in general, the exceptions that could be thrown should be the exact

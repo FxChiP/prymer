@@ -66,9 +66,103 @@ class _GetChainLink(object):
             it's expected to transform the result into something to
             pass down the line
         """
-        self.__op = op
-        self.__op_arg = op_arg
-        self.__parent = parent
+        def _call(source):
+            """
+            Run the entire chain on source
+
+            This will recurse up the chain (i.e. each
+            _GetChainLink calling into its self.__parent)
+            before running this chain link's operation with
+            op arg and returning the result (either to its
+            child or to the actual caller)
+            """
+            def _shapyro_Get_resolve_from_current(current):
+                """
+                This part will just resolve what the current op
+                on the current link is. We're defining it here
+                so that we can re-use the functionality if we
+                happen to hit an asyncio coroutine vs. inlining
+                the whole thing.
+                """
+                if callable(op_arg):
+                    # Means we want to do an operation
+                    # while we're doing the get
+                    # The operation will completely
+                    # transform the result, and that
+                    # transformation is what should go
+                    # down the line
+                    try:
+                        result = op_arg(current)
+                    except SkipIteration as e:
+                        # SkipIteration doesn't have any
+                        # special meaning to shapyro.Get
+                        # see shapyro.op for more details
+                        # but we want to raise whatever
+                        # got SkipIteration'd
+                        e.reraise()
+                elif op is None:
+                    # noop: identity
+                    result = current
+                else:
+                    result = op(current, op_arg)
+                
+                return result
+
+            async def _shapyro_async_Get_resolve(current, result=None):
+                """
+                Either parent or current link is asyncio coroutine
+                So we must await the parent or the current or both
+                """
+
+                # maybe await parent
+                if asyncio.iscoroutine(current):
+                    current = await current
+                
+                if result is None:
+                    # XXX: if it turned out the result of the current
+                    # op is None, we technically take a slight perf hit
+                    # here from doing it again ¯\_(ツ)_/¯
+                    result = _shapyro_Get_resolve_from_current(current)
+
+                if asyncio.iscoroutine(result):
+                    result = await result
+                
+                return result
+            
+
+            # Recurse up the chain
+            if parent:
+                current = parent(source)
+            else:
+                current = source
+
+            if asyncio.iscoroutine(current):
+                # We have to return the coroutine that
+                # resolves this chain
+                return _shapyro_async_Get_resolve(current)
+            else:
+                # Parent was fine, let's try this link
+                result = _shapyro_Get_resolve_from_current(current)
+                if asyncio.iscoroutine(result):
+                    # We have to return the coroutine that
+                    # resolves this chain
+                    return _shapyro_async_Get_resolve(current, result)
+                else:
+                    # We're all sync, so we're all good
+                    return result
+        
+        def _repr():
+            if op is None and parent is None:
+                return "shapyro.Get"
+            else:
+                if op is getattr:
+                    return f"{parent.__repr__()}.{op_arg}"
+                elif op is _get_bracket:
+                    if callable(op_arg):
+                        return f"{parent.__repr__()}[{op_arg.__name__}(...)]"
+                    else:
+                        return f"{parent.__repr__()}[{op_arg.__repr__()}]"
+        self.__call_repr = (_call, _repr)
 
     def __getattr__(self, target_attr):
         """
@@ -85,101 +179,12 @@ class _GetChainLink(object):
         return _GetChainLink(self, _get_bracket, target_whatever)
     
     def __repr__(self):
-        if self.__op is None and self.__parent is None:
-            return "shapyro.Get"
-        else:
-            if self.__op is getattr:
-                return f"{self.__parent.__repr__()}.{self.__op_arg}"
-            elif self.__op is _get_bracket:
-                if callable(self.__op_arg):
-                    return f"{self.__parent.__repr__()}[{self.__op_arg.__name__}(...)]"
-                else:
-                    return f"{self.__parent.__repr__()}[{self.__op_arg.__repr__()}]"
-
+        _, _repr = self.__call_repr
+        return _repr()
+    
     def __call__(self, source):
-        """
-        Run the entire chain on source
-
-        This will recurse up the chain (i.e. each
-        _GetChainLink calling into its self.__parent)
-        before running this chain link's operation with
-        op arg and returning the result (either to its
-        child or to the actual caller)
-        """
-        def _shapyro_Get_resolve_from_current(current):
-            """
-            This part will just resolve what the current op
-            on the current link is. We're defining it here
-            so that we can re-use the functionality if we
-            happen to hit an asyncio coroutine vs. inlining
-            the whole thing.
-            """
-            if callable(self.__op_arg):
-                # Means we want to do an operation
-                # while we're doing the get
-                # The operation will completely
-                # transform the result, and that
-                # transformation is what should go
-                # down the line
-                try:
-                    result = self.__op_arg(current)
-                except SkipIteration as e:
-                    # SkipIteration doesn't have any
-                    # special meaning to shapyro.Get
-                    # see shapyro.op for more details
-                    # but we want to raise whatever
-                    # got SkipIteration'd
-                    e.reraise()
-            elif self.__op is None:
-                # noop: identity
-                result = current
-            else:
-                result = self.__op(current, self.__op_arg)
-            
-            return result
-
-        async def _shapyro_async_Get_resolve(current, result=None):
-            """
-            Either parent or current link is asyncio coroutine
-            So we must await the parent or the current or both
-            """
-
-            # maybe await parent
-            if asyncio.iscoroutine(current):
-                current = await current
-            
-            if result is None:
-                # XXX: if it turned out the result of the current
-                # op is None, we technically take a slight perf hit
-                # here from doing it again ¯\_(ツ)_/¯
-                result = _shapyro_Get_resolve_from_current(current)
-
-            if asyncio.iscoroutine(result):
-                result = await result
-            
-            return result
-        
-
-        # Recurse up the chain
-        if self.__parent:
-            current = self.__parent(source)
-        else:
-            current = source
-
-        if asyncio.iscoroutine(current):
-            # We have to return the coroutine that
-            # resolves this chain
-            return _shapyro_async_Get_resolve(current)
-        else:
-            # Parent was fine, let's try this link
-            result = _shapyro_Get_resolve_from_current(current)
-            if asyncio.iscoroutine(result):
-                # We have to return the coroutine that
-                # resolves this chain
-                return _shapyro_async_Get_resolve(current, result)
-            else:
-                # We're all sync, so we're all good
-                return result
+        _call, _ = self.__call_repr
+        return _call(source)
 
 
 Get = _GetChainLink()
